@@ -3,8 +3,8 @@
 #include <future>
 #include <chrono>
 
-std::vector<int> seed_gen(const size_t limit) {
-	const size_t size = sqrt(limit);
+std::vector<int> seed_gen(const long long limit) {
+	const long long size = sqrt(limit);
 	std::vector<bool> data;
 	data.resize(size);
 	for (int i = 0; i < data.size(); i++) {
@@ -12,8 +12,8 @@ std::vector<int> seed_gen(const size_t limit) {
 	}
 	data[0] = true;
 	data[1] = true;
-	for (size_t s = 2; s*s <= size;) {
-		for (size_t i = s*s; i < size; i+=s) {
+	for (long long s = 2; s*s <= size;) {
+		for (long long i = s*s; i < size; i+=s) {
 			data[i] = true;
 		}
 		s++;
@@ -22,7 +22,7 @@ std::vector<int> seed_gen(const size_t limit) {
 		}
 	}
 	std::vector<int> result;
-	for (size_t i = 0; i < data.size(); i++) {
+	for (long long i = 0; i < data.size(); i++) {
 		if (data[i] == false) {
 			result.push_back(i);
 		}
@@ -54,7 +54,7 @@ int extgcd(int a, int b, int &x, int &y) {
 	return d;
 }
 
-std::vector<int> initial_start_pos_gen(const size_t base_sieve_size, const size_t sieve_max, const std::vector<int>& seed_prime) {
+std::vector<int> initial_start_pos_gen(const long long base_sieve_size, const long long sieve_max, const std::vector<int>& seed_prime) {
 	// sieve_max*x - seed_prime*y = -1を満たすyの配列を返す。
 	// つまり、あまり1のスレッドにおける各素数の開始位置を返す。
 	std::vector<int> v;
@@ -77,10 +77,9 @@ int eratosthenes_thread(const int offset, const int base_sieve_size, const int s
 	for (int i = base_sieve_size; i < seed_prime.size(); i++) {
 		// 開始場所の計算
 		const long long sqprm = (long long)seed_prime[i]*seed_prime[i];
-		const size_t sqprm_line = sqprm/sieve_max;
-		size_t start_pos = (initial_start_pos[i]*offset)%seed_prime[i];
-		start_pos += (sqprm_line/seed_prime[i])*seed_prime[i];
-		for (size_t j = start_pos; j < data.size(); j+= seed_prime[i]) {
+		const long long sqprm_line = sqprm/sieve_max;
+		const long long start_pos = (initial_start_pos[i]*offset)%seed_prime[i] + (sqprm_line/seed_prime[i])*seed_prime[i];
+		for (long long j = start_pos; j < data.size(); j+= seed_prime[i]) {
 			data[j] = true;
 		}
 	}
@@ -88,8 +87,8 @@ int eratosthenes_thread(const int offset, const int base_sieve_size, const int s
 }
 
 int main() {
-	const size_t limit = (size_t)1<<32;
-	// const size_t limit = pow(10, 11);
+	const long long limit = (long long)1<<32;
+	// const long long limit = pow(10, 11);
 	std::cout << limit << '\n';
 	const auto seed_prime = seed_gen(limit);
 	const int base_sieve_size = 3; // base_sieve_size個の素数で配列を分割する。
@@ -112,7 +111,7 @@ int main() {
 		}else {
 			data[i].resize(limit/sieve_max);
 		}
-		for (size_t j = 0; j < data[i].size(); j++) {
+		for (long long j = 0; j < data[i].size(); j++) {
 			data[i][j] = false;
 		}
 	}
@@ -135,9 +134,9 @@ int main() {
 	}
 	auto end = std::chrono::system_clock::now();
 
-	size_t count = 0;
-	for (size_t i = 0; i < data.size(); i++) {
-		for (size_t j = 0; j < data[i].size(); j++) {
+	long long count = 0;
+	for (long long i = 0; i < data.size(); i++) {
+		for (long long j = 0; j < data[i].size(); j++) {
 			if (data[i][j] == false) {
 				count++;
 			}

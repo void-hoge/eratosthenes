@@ -76,7 +76,7 @@ std::vector<int> initial_start_pos_gen(const size_t base_sieve_size, const size_
 int eratosthenes_thread(const int offset, const int base_sieve_size, const int sieve_max, const std::vector<int>& seed_prime, const std::vector<int>& initial_start_pos, std::vector<bool>& data) {
 	for (int i = base_sieve_size; i < seed_prime.size(); i++) {
 		// 開始場所の計算
-		const long long sqprm = seed_prime[i]*seed_prime[i];
+		const long long sqprm = (long long)seed_prime[i]*seed_prime[i];
 		const size_t sqprm_line = sqprm/sieve_max;
 		size_t start_pos = (initial_start_pos[i]*offset)%seed_prime[i];
 		start_pos += (sqprm_line/seed_prime[i])*seed_prime[i];
@@ -89,6 +89,7 @@ int eratosthenes_thread(const int offset, const int base_sieve_size, const int s
 
 int main() {
 	const size_t limit = (size_t)1<<32;
+	// const size_t limit = pow(10, 11);
 	std::cout << limit << '\n';
 	const auto seed_prime = seed_gen(limit);
 	const int base_sieve_size = 3; // base_sieve_size個の素数で配列を分割する。

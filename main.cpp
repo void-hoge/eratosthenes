@@ -90,8 +90,9 @@ int main() {
 	const long long limit = (long long)1<<32;
 	// const long long limit = pow(10, 11);
 	std::cout << limit << '\n';
+	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);
-	const int base_sieve_size = 3; // base_sieve_size個の素数で配列を分割する。
+	const int base_sieve_size = 3; // base_sieve_size個の素数で配列を分割する。1だと奇数だけを探索
 	const auto base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
 	auto f = [&](){
 		int tmp = 1;
@@ -101,10 +102,12 @@ int main() {
 		return tmp;
 	};
 	const int sieve_max = f();
+	const auto initial_start_pos = initial_start_pos_gen(base_sieve_size, sieve_max, seed_prime);
 
+	// メモリの確保
 	std::vector<std::vector<bool>> data;
 	data.resize(base_sieve.size());
-	std::cout << "allocating..." << '\n';
+	std::cout << "allocating memories..." << '\n';
 	for (int i = 0; i < data.size(); i++) {
 		if (base_sieve[i] <= limit%sieve_max) {
 			data[i].resize(limit/sieve_max+1);
@@ -115,16 +118,19 @@ int main() {
 			data[i][j] = false;
 		}
 	}
-	std::cout << "allocated" << '\n';
+	int datasize = 0;
+	for (int i = 0; i < data.size(); i++) {
+		datasize += data[i].size()/8;
+	}
+	std::cout << "about " << datasize/(pow(1024, 3)) << "GB allocated." << '\n';
 
 	data[0][0] = true; // 1を非素数にセット
 
-	const auto initial_start_pos = initial_start_pos_gen(base_sieve_size, sieve_max, seed_prime);
 
 	auto start = std::chrono::system_clock::now();
 	std::vector<std::future<int>> v;
 	for (int i = 0; i < base_sieve.size(); i++) {
-		v.push_back(std::async(std::launch::async, [=, &seed_prime, &initial_start_pos, &data]{
+		v.push_back(std::async(std::launch::async, [&, i]{
 			return eratosthenes_thread(base_sieve[i], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[i]);
 		}));
 		// eratosthenes_thread(base_sieve[i], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[i]);
@@ -134,6 +140,7 @@ int main() {
 	}
 	auto end = std::chrono::system_clock::now();
 
+	// 素数のカウント
 	long long count = 0;
 	for (long long i = 0; i < data.size(); i++) {
 		for (long long j = 0; j < data[i].size(); j++) {
@@ -144,6 +151,6 @@ int main() {
 	}
 	std::cout << "There are " << count+base_sieve_size-1+base_sieve.size() << " prime numbers below " << limit << ".\n";
 	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-	std::cout << elapsed << " milliseconds." << '\n';
+	std::cout << elapsed << " milliseconds" << '\n';
 	return 0;
 }

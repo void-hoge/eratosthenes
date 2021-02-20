@@ -81,13 +81,9 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 	for (int i = base_sieve_size; i < seed_prime.size(); i++) {
 		// 開始場所の計算
 		long long start_pos = (initial_start_pos[i]*offset)%seed_prime[i];
-		// std::cout << seed_prime[i] << " " << start_pos << '\n';
-		// std::cout << "\t" << start_pos << '\n';
 		if (start_pos*sieve_max+offset == seed_prime[i]) {
 			start_pos += seed_prime[i];
 		}
-		// std::cout << "\t" << start_pos*sieve_max+offset << '\n';
-		// std::cout << "\t" << (start_pos*sieve_max+offset)/seed_prime[i] << '\n';
 
 		for (long long j = start_pos; j < data.size(); j+= seed_prime[i]) {
 			data[j] = true;
@@ -98,8 +94,7 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 }
 
 int main() {
-	// const long long limit = (long long)1<<20;
-	const long long limit = pow(10, 11);
+	const long long limit = (long long)1<<32;
 	std::cerr << limit << '\n';
 	// データ構造の準備
 	const int base_sieve_size = 4; // base_sieve_size個の素数で配列を分割する。1だと奇数だけを探索
@@ -128,13 +123,14 @@ int main() {
 	}
 	long long datasize = 0;
 	for (int i = 0; i < data.size(); i++) {
-		datasize += data[i].size()/8;
+		datasize += data[i].size();
 	}
-	std::cerr << "about " << datasize/(pow(1024, 3)) << "GB allocated." << '\n';
+	std::cerr << "about " << datasize/8/(pow(1024, 3)) << " GB (" << datasize << " bits) allocated." << '\n';
+	std::cerr << "compression ratio: " << (double)limit/datasize << '\n';
 
 	data[0][0] = true; // 1は素数ではない。
 
-	auto start = std::chrono::system_clock::now();
+	const auto start = std::chrono::system_clock::now();
 	std::vector<std::future<std::chrono::system_clock::duration>> threads;
 	for (int i = 0; i < base_sieve.size(); i++) {
 		threads.push_back(std::async(std::launch::async, [&, i]{

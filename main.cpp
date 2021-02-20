@@ -153,11 +153,10 @@ int main() {
 
 	// 素数のカウント
 	long long count = 0;
-	std::vector<long long> result;
+	std::cerr << "counting..." << '\n';
 	for (long long i = 0; i < data.size(); i++) {
 		for (long long j = 0; j < data[i].size(); j++) {
 			if (data[i][j] == false) {
-				result.push_back(j*sieve_max+base_sieve[i]);
 				count++;
 			}
 		}

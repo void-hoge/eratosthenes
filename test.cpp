@@ -4,7 +4,8 @@
 #include <bitset>
 #include <algorithm>
 
-const size_t SIZE = (size_t)1<<8;
+// const size_t SIZE = (size_t)1<<8;
+const size_t SIZE = 100000;
 
 long long extGCD(long long a, long long b, long long &x, long long &y) {
     if (b == 0) {
@@ -49,13 +50,13 @@ int main() {
 	int count = 0;
 	for (size_t i = 0; i < data.size(); i++) {
 		if (data[i] == false) {
-			// std::cout << i << '\n';
+			std::cout << i << '\n';
 			count++;
 		}
 	}
-	std::cout << "There are " << count << " prime numbers below " << SIZE-1 << ".\n";
+	std::cerr << "There are " << count << " prime numbers below " << SIZE-1 << ".\n";
 	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-	std::cout << elapsed << " milliseconds." << '\n';
+	std::cerr << elapsed << " milliseconds." << '\n';
 
 	return 0;
 }

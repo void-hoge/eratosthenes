@@ -2,9 +2,11 @@
 #include <vector>
 #include <future>
 #include <chrono>
+#include <algorithm>
+#include <numeric>
 
 std::vector<int> seed_gen(const long long limit) {
-	const long long size = sqrt(limit);
+	const long long size = sqrt(limit)+1;
 	std::vector<bool> data;
 	data.resize(size);
 	for (int i = 0; i < data.size(); i++) {
@@ -36,9 +38,10 @@ std::vector<int> base_sieve_gen(const int base_sieve_size, const std::vector<int
 		sieve_max *= seed_prime[i];
 	}
 	std::vector<int> v;
-	v.push_back(1);
-	for (int i = base_sieve_size; seed_prime[i] < sieve_max; i++) {
-		v.push_back(seed_prime[i]);
+	for (int i = 1; i < sieve_max; i++) {
+		if (std::gcd(sieve_max, i) == 1) {
+			v.push_back(i);
+		}
 	}
 	return v;
 }
@@ -73,26 +76,34 @@ std::vector<int> initial_start_pos_gen(const long long base_sieve_size, const lo
 	return v;
 }
 
-int eratosthenes_thread(const int offset, const int base_sieve_size, const int sieve_max, const std::vector<int>& seed_prime, const std::vector<int>& initial_start_pos, std::vector<bool>& data) {
+std::chrono::system_clock::duration eratosthenes_thread(const int offset, const int base_sieve_size, const int sieve_max, const std::vector<int>& seed_prime, const std::vector<int>& initial_start_pos, std::vector<bool>& data) {
+	const auto start = std::chrono::system_clock::now();
 	for (int i = base_sieve_size; i < seed_prime.size(); i++) {
 		// 開始場所の計算
-		const long long sqprm = (long long)seed_prime[i]*seed_prime[i];
-		const long long sqprm_line = sqprm/sieve_max;
-		const long long start_pos = (initial_start_pos[i]*offset)%seed_prime[i] + (sqprm_line/seed_prime[i])*seed_prime[i];
+		long long start_pos = (initial_start_pos[i]*offset)%seed_prime[i];
+		// std::cout << seed_prime[i] << " " << start_pos << '\n';
+		// std::cout << "\t" << start_pos << '\n';
+		if (start_pos*sieve_max+offset == seed_prime[i]) {
+			start_pos += seed_prime[i];
+		}
+		// std::cout << "\t" << start_pos*sieve_max+offset << '\n';
+		// std::cout << "\t" << (start_pos*sieve_max+offset)/seed_prime[i] << '\n';
+
 		for (long long j = start_pos; j < data.size(); j+= seed_prime[i]) {
 			data[j] = true;
 		}
 	}
-	return 0;
+	const auto end = std::chrono::system_clock::now();
+	return end - start;
 }
 
 int main() {
-	const long long limit = (long long)1<<32;
-	// const long long limit = pow(10, 11);
-	std::cout << limit << '\n';
+	// const long long limit = (long long)1<<20;
+	const long long limit = pow(10, 11);
+	std::cerr << limit << '\n';
 	// データ構造の準備
+	const int base_sieve_size = 4; // base_sieve_size個の素数で配列を分割する。1だと奇数だけを探索
 	const auto seed_prime = seed_gen(limit);
-	const int base_sieve_size = 3; // base_sieve_size個の素数で配列を分割する。1だと奇数だけを探索
 	const auto base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
 	auto f = [&](){
 		int tmp = 1;
@@ -107,50 +118,53 @@ int main() {
 	// メモリの確保
 	std::vector<std::vector<bool>> data;
 	data.resize(base_sieve.size());
-	std::cout << "allocating memories..." << '\n';
+	std::cerr << "allocating memories..." << '\n';
 	for (int i = 0; i < data.size(); i++) {
 		if (base_sieve[i] <= limit%sieve_max) {
 			data[i].resize(limit/sieve_max+1);
 		}else {
 			data[i].resize(limit/sieve_max);
 		}
-		for (long long j = 0; j < data[i].size(); j++) {
-			data[i][j] = false;
-		}
 	}
-	int datasize = 0;
+	long long datasize = 0;
 	for (int i = 0; i < data.size(); i++) {
 		datasize += data[i].size()/8;
 	}
-	std::cout << "about " << datasize/(pow(1024, 3)) << "GB allocated." << '\n';
+	std::cerr << "about " << datasize/(pow(1024, 3)) << "GB allocated." << '\n';
 
-	data[0][0] = true; // 1を非素数にセット
-
+	data[0][0] = true; // 1は素数ではない。
 
 	auto start = std::chrono::system_clock::now();
-	std::vector<std::future<int>> v;
+	std::vector<std::future<std::chrono::system_clock::duration>> threads;
 	for (int i = 0; i < base_sieve.size(); i++) {
-		v.push_back(std::async(std::launch::async, [&, i]{
+		threads.push_back(std::async(std::launch::async, [&, i]{
 			return eratosthenes_thread(base_sieve[i], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[i]);
 		}));
-		// eratosthenes_thread(base_sieve[i], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[i]);
 	}
-	for (int i = 0; i < v.size(); i++) {
-		v[i].get();
+
+	// int t = 9;
+	// eratosthenes_thread(base_sieve[t], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[t]);
+	for (int i = 0; i < threads.size(); i++) {
+		std::cerr << "thread " << i << " : " <<
+		 std::chrono::duration_cast<std::chrono::milliseconds>(threads[i].get()).count() <<
+		" milliseconds" << '\n';
 	}
 	auto end = std::chrono::system_clock::now();
 
 	// 素数のカウント
 	long long count = 0;
+	std::vector<long long> result;
 	for (long long i = 0; i < data.size(); i++) {
 		for (long long j = 0; j < data[i].size(); j++) {
 			if (data[i][j] == false) {
+				result.push_back(j*sieve_max+base_sieve[i]);
 				count++;
 			}
 		}
 	}
-	std::cout << "There are " << count+base_sieve_size-1+base_sieve.size() << " prime numbers below " << limit << ".\n";
+	count += base_sieve_size;
+	std::cerr << "There are " << count << " prime numbers below " << limit << ".\n";
 	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-	std::cout << elapsed << " milliseconds" << '\n';
+	std::cerr << elapsed << " milliseconds" << '\n';
 	return 0;
 }

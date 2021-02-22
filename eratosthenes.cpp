@@ -125,7 +125,6 @@ void eratosthenes_binary_array(const long long limit, const int base_sieve_size,
 	}
 	debug << "about " << datasize/8/(pow(1024, 3)) << " GB (" << datasize << " bits) allocated." << '\n';
 	debug << "compression ratio: " << (double)limit/datasize << '\n';
-	std::abort();
 
 	data[0][0] = true; // 1は素数ではない。
 

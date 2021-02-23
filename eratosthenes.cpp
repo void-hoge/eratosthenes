@@ -90,7 +90,7 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 	return end - start;
 }
 
-void eratosthenes_binary_array(const long long limit, const int base_sieve_size, std::vector<std::vector<bool>>& data, std::ostream& debug) {
+void voidhoge::eratosthenes_binary_array(const long long limit, const int base_sieve_size, voidhoge::prime_binary_array& result, std::ostream& debug) {
 	debug << limit << '\n';
 	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);
@@ -106,7 +106,7 @@ void eratosthenes_binary_array(const long long limit, const int base_sieve_size,
 	const auto initial_start_pos = initial_start_pos_gen(base_sieve_size, sieve_max, seed_prime);
 
 	// メモリの確保
-	data.clear();
+	std::vector<std::vector<bool>> data;
 	data.resize(base_sieve.size());
 	debug << "allocating memories..." << '\n';
 	for (size_t i = 0; i < data.size(); i++) {
@@ -158,5 +158,37 @@ void eratosthenes_binary_array(const long long limit, const int base_sieve_size,
 	debug << count << " prime numbers below " << limit << ".\n";
 	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 	debug << elapsed << " milliseconds" << '\n';
+	result = prime_binary_array(data, base_sieve, sieve_max);
 	return;
+}
+
+voidhoge::prime_binary_array::prime_binary_array (const std::vector<std::vector<bool>>& data, const std::vector<int>& base, int sieve_max) {
+	this->data = data;
+	this->base = base;
+	this->sieve_max = sieve_max;
+}
+
+std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_pos, const size_t line_pos) const {
+	if (base_pos < 0) {
+		return std::make_pair(0, false);
+	}else if(base_pos >= base.size()) {
+		return std::make_pair(0, false);
+	}
+	if (line_pos < 0) {
+		return std::make_pair(0, false);
+	}else if(line_pos >= this->data[base_pos].size()) {
+		return std::make_pair(0, false);
+	}
+	return std::make_pair(this->sieve_max*line_pos+this->base[base_pos], !this->data[base_pos][line_pos]);
+}
+
+size_t voidhoge::prime_binary_array::get_base_size() const {
+	return this->base.size();
+}
+
+size_t voidhoge::prime_binary_array::get_line_size() const {
+	if (data.empty()) {
+		return 0;
+	}
+	return this->data[0].size();
 }

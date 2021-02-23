@@ -90,7 +90,7 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 	return end - start;
 }
 
-void voidhoge::eratosthenes_binary_array(const long long limit, const int base_sieve_size, voidhoge::prime_binary_array& result, std::ostream& debug) {
+void voidhoge::eratosthenes_multithread(const long long limit, const int base_sieve_size, voidhoge::prime_binary_array& result, std::ostream& debug) {
 	debug << limit << '\n';
 	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);

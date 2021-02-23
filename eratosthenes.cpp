@@ -90,11 +90,11 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 	return end - start;
 }
 
-void voidhoge::eratosthenes_multithread(const long long limit, const int base_sieve_size, voidhoge::prime_binary_array& result, std::ostream& debug) {
+void voidhoge::prime_binary_array::eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug) {
 	debug << limit << '\n';
 	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);
-	const auto base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
+	base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
 	auto f = [&](){
 		int tmp = 1;
 		for (int i = 0; i < base_sieve_size; i++) {
@@ -106,7 +106,6 @@ void voidhoge::eratosthenes_multithread(const long long limit, const int base_si
 	const auto initial_start_pos = initial_start_pos_gen(base_sieve_size, sieve_max, seed_prime);
 
 	// メモリの確保
-	std::vector<std::vector<bool>> data;
 	data.resize(base_sieve.size());
 	debug << "allocating memories..." << '\n';
 	for (size_t i = 0; i < data.size(); i++) {
@@ -158,37 +157,36 @@ void voidhoge::eratosthenes_multithread(const long long limit, const int base_si
 	debug << count << " prime numbers below " << limit << ".\n";
 	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 	debug << elapsed << " milliseconds" << '\n';
-	result = prime_binary_array(data, base_sieve, sieve_max);
 	return;
 }
 
-voidhoge::prime_binary_array::prime_binary_array (const std::vector<std::vector<bool>>& data, const std::vector<int>& base, int sieve_max) {
-	this->data = data;
-	this->base = base;
-	this->sieve_max = sieve_max;
-}
-
 std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_pos, const size_t line_pos) const {
+	if (base_sieve.empty() == true) {
+		return std::make_pair(0, false);
+	}
 	if (base_pos < 0) {
 		return std::make_pair(0, false);
-	}else if(base_pos >= base.size()) {
+	}else if(base_pos >= base_sieve.size()) {
 		return std::make_pair(0, false);
 	}
 	if (line_pos < 0) {
 		return std::make_pair(0, false);
-	}else if(line_pos >= this->data[base_pos].size()) {
+	}else if(line_pos >= data[base_pos].size()) {
 		return std::make_pair(0, false);
 	}
-	return std::make_pair(this->sieve_max*line_pos+this->base[base_pos], !this->data[base_pos][line_pos]);
+	return std::make_pair(sieve_max*line_pos+base_sieve[base_pos], !data[base_pos][line_pos]);
 }
 
 size_t voidhoge::prime_binary_array::get_base_size() const {
-	return this->base.size();
+	if (base_sieve.empty() == true) {
+		return 0;
+	}
+	return base_sieve.size();
 }
 
 size_t voidhoge::prime_binary_array::get_line_size() const {
 	if (data.empty()) {
 		return 0;
 	}
-	return this->data[0].size();
+	return data[0].size();
 }

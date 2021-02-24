@@ -10,6 +10,7 @@ int main() {
 	// (long long)pow(10, 11);
 	const int base_sieve_size = 5;
 	voidhoge::prime_binary_array data;
-	data.eratosthenes_multithread(limit, base_sieve_size, std::cout);
+	voidhoge::null_stream nullstrm;
+	data.eratosthenes_multithread(limit, base_sieve_size, nullstrm);
 	return 0;
 }

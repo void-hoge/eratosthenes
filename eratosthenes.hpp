@@ -4,8 +4,22 @@
 #include <ostream>
 #include <vector>
 #include <utility>
+#include <iostream>
 
 namespace voidhoge{
+
+class null_stream : public std::streambuf, public std::ostream {
+	char buf_[128];
+protected:
+	virtual int overflow(int c) {
+		// // std::cout << "overflow( " << c << " )" << std::endl;
+		setp( buf_, buf_ + sizeof( buf_ ) );
+		return ( c == eof() ? '\0' : c );
+	}
+
+public:
+	null_stream() : std::ostream(this) {}
+};
 
 class prime_binary_array {
 private:

@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 #include <iostream>
+#include <chrono>
 
 namespace voidhoge{
 
@@ -31,7 +32,7 @@ public:
 	std::pair<long long, bool> at(const size_t base_pos, const size_t line_pos) const;
 	size_t get_base_size() const;
 	size_t get_line_size() const;
-	void eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug);
+	double eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug);
 };
 
 } //namespace voidhoge

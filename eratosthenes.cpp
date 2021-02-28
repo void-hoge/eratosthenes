@@ -90,7 +90,7 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 	return end - start;
 }
 
-void voidhoge::prime_binary_array::eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug) {
+double voidhoge::prime_binary_array::eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug) {
 	debug << limit << '\n';
 	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);
@@ -129,18 +129,25 @@ void voidhoge::prime_binary_array::eratosthenes_multithread(const long long limi
 
 	const auto start = std::chrono::system_clock::now();
 	std::vector<std::future<std::chrono::system_clock::duration>> threads;
-	for (size_t i = 0; i < base_sieve.size(); i++) {
-		threads.push_back(std::async(std::launch::async, [&, i]{
-			return eratosthenes_thread(base_sieve[i], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[i]);
-		}));
-		// eratosthenes_thread(base_sieve[i], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[i]);
+
+	const unsigned int num_of_threads
+	// = std::thread::hardware_concurrency(); // ハードウェアのスレッド数だけ立ち上げ
+	= ~0; // 全部同時に立ち上げ
+	for (size_t i = 0; i < base_sieve.size(); i += num_of_threads) {
+		for (size_t j = 0; j < num_of_threads && i+j < base_sieve.size(); j++) {
+			const int a = i+j;
+			threads.push_back(std::async(std::launch::async, [&, a]{
+				return eratosthenes_thread(base_sieve[a], base_sieve_size, sieve_max, seed_prime, initial_start_pos, data[a]);
+			}));
+		}
+		for (size_t j = 0; j < threads.size(); j++) {
+			debug << "thread " << i << " " << j << " "<< i+j << " : " <<
+			 std::chrono::duration_cast<std::chrono::milliseconds>(threads[j].get()).count() <<
+			" milliseconds" << '\n';
+		}
+		threads.clear();
 	}
 
-	for (size_t i = 0; i < threads.size(); i++) {
-		debug << "thread " << i << " : " <<
-		 std::chrono::duration_cast<std::chrono::milliseconds>(threads[i].get()).count() <<
-		" milliseconds" << '\n';
-	}
 	const auto end = std::chrono::system_clock::now();
 
 	// 素数のカウント
@@ -157,7 +164,7 @@ void voidhoge::prime_binary_array::eratosthenes_multithread(const long long limi
 	debug << count << " prime numbers below " << limit << ".\n";
 	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 	debug << elapsed << " milliseconds" << '\n';
-	return;
+	return elapsed;
 }
 
 std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_pos, const size_t line_pos) const {

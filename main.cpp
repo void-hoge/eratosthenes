@@ -6,11 +6,12 @@
 int main() {
 	const long long limit =
 	// (long long)1<<16;
-	(long long)1 << 32;
-	// (long long)pow(10, 11);
-	const int base_sieve_size = 5;
+	// (long long)1 << 32;
+	(long long)pow(10, 11);
+	const int base_sieve_size = 6;
 	voidhoge::prime_binary_array data;
 	voidhoge::null_stream nullstrm;
-	data.eratosthenes_multithread(limit, base_sieve_size, nullstrm);
+
+	std::cout << data.eratosthenes_multithread(limit, base_sieve_size, nullstrm) << " milliseconds" << '\n';
 	return 0;
 }

@@ -26,14 +26,13 @@ class prime_binary_array {
 private:
 	std::vector<std::vector<bool>> data;
 	std::vector<int> base_sieve;
-	long long sieve_max;
+	int sieve_max;
 public:
 	prime_binary_array (){};
 	std::pair<long long, bool> at(const size_t base_pos, const size_t line_pos) const;
 	size_t get_base_size() const;
 	size_t get_line_size() const;
-	long long eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug);
-	void dump(const long long start, const long long end, const std::string separator, std::ostream& ost);
+	double eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug);
 };
 
 } //namespace voidhoge

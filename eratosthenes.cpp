@@ -90,7 +90,7 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 	return end - start;
 }
 
-double voidhoge::prime_binary_array::eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug) {
+long long voidhoge::prime_binary_array::eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug) {
 	debug << limit << '\n';
 	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);
@@ -102,7 +102,7 @@ double voidhoge::prime_binary_array::eratosthenes_multithread(const long long li
 		}
 		return tmp;
 	};
-	const int sieve_max = f();
+	this->sieve_max = f();
 	const auto initial_start_pos = initial_start_pos_gen(base_sieve_size, sieve_max, seed_prime);
 
 	// メモリの確保
@@ -131,8 +131,8 @@ double voidhoge::prime_binary_array::eratosthenes_multithread(const long long li
 	std::vector<std::future<std::chrono::system_clock::duration>> threads;
 
 	const unsigned int num_of_threads
-	// = std::thread::hardware_concurrency(); // ハードウェアのスレッド数だけ立ち上げ
-	= ~0; // 全部同時に立ち上げ
+	= std::thread::hardware_concurrency()*64; // ハードウェアのスレッド数だけ立ち上げ
+	// = ~0; // 全部同時に立ち上げ
 	for (size_t i = 0; i < base_sieve.size(); i += num_of_threads) {
 		for (size_t j = 0; j < num_of_threads && i+j < base_sieve.size(); j++) {
 			const int a = i+j;
@@ -141,9 +141,10 @@ double voidhoge::prime_binary_array::eratosthenes_multithread(const long long li
 			}));
 		}
 		for (size_t j = 0; j < threads.size(); j++) {
-			debug << "thread " << i << " " << j << " "<< i+j << " : " <<
-			 std::chrono::duration_cast<std::chrono::milliseconds>(threads[j].get()).count() <<
-			" milliseconds" << '\n';
+			// debug << "thread " << i << " " << j << " "<< i+j << " : " <<
+			//  std::chrono::duration_cast<std::chrono::milliseconds>(threads[j].get()).count() <<
+			// " milliseconds" << '\n';
+			threads[j].get().count();
 		}
 		threads.clear();
 	}
@@ -161,10 +162,8 @@ double voidhoge::prime_binary_array::eratosthenes_multithread(const long long li
 		}
 	}
 	count += base_sieve_size;
-	debug << count << " prime numbers below " << limit << ".\n";
-	double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-	debug << elapsed << " milliseconds" << '\n';
-	return elapsed;
+	debug << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " milliseconds" << '\n';
+	return count;
 }
 
 std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_pos, const size_t line_pos) const {
@@ -185,7 +184,7 @@ std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_po
 }
 
 size_t voidhoge::prime_binary_array::get_base_size() const {
-	if (base_sieve.empty() == true) {
+	if (base_sieve.empty()) {
 		return 0;
 	}
 	return base_sieve.size();
@@ -196,4 +195,36 @@ size_t voidhoge::prime_binary_array::get_line_size() const {
 		return 0;
 	}
 	return data[0].size();
+}
+
+void voidhoge::prime_binary_array::dump(const long long int start, const long long int end, const std::string separator, std::ostream& ost) {
+	auto start_line = start / *(this->base_sieve.end()-1);
+	if (start_line < 0) {
+		start_line = 0;
+	}
+	for (size_t i = 1; i < this->base_sieve.size(); i++) {
+		if (this->base_sieve.at(i) < start) {
+			continue;
+		}
+		if (this->base_sieve.at(i) >= end) {
+			ost << '\n';
+			return;
+		}
+		ost << this->base_sieve.at(i) << separator;
+	}
+	for (size_t i = start_line; i < this->get_line_size(); i++) {
+		for (size_t j = 0; j < this->get_base_size(); j++) {
+			if (this->at(j, i).first < start) {
+				continue;
+			}
+			if (this->at(j, i).first >= end) {
+				ost << '\n';
+				return;
+			}
+			if (this->at(j, i).second) {
+				ost << this->at(j, i).first << separator;
+			}
+		}
+	}
+	ost << '\n';
 }

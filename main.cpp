@@ -8,7 +8,7 @@ int main() {
 	const auto limit =
 	// (long long)1<<16;
 	// (long long)1 << 32;
-	(long long)std::pow(10, 7);
+	(long long)std::pow(10, 8);
 	const int base_sieve_size = 3;
 	voidhoge::prime_binary_array data;
 	voidhoge::null_stream nullstrm;

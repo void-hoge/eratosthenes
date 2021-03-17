@@ -4,10 +4,10 @@
 #include <chrono>
 #include <algorithm>
 #include <numeric>
-#include <math.h>
+#include <cmath>
 
 std::vector<int> seed_gen(const long long limit) {
-	const long long size = sqrt(limit)+1;
+	const auto size = (long long)std::sqrt(limit)+1;
 	std::vector<bool> data(size, false);
 	data[0] = true;
 	data[1] = true;
@@ -16,13 +16,13 @@ std::vector<int> seed_gen(const long long limit) {
 			data[i] = true;
 		}
 		s++;
-		while (data[s] == true) {
+		while (data[s]) {
 			s++;
 		}
 	}
 	std::vector<int> result;
 	for (size_t i = 0; i < data.size(); i++) {
-		if (data[i] == false) {
+		if (!data[i]) {
 			result.push_back(i);
 		}
 	}
@@ -56,11 +56,8 @@ int extgcd(int a, int b, int &x, int &y) {
 
 std::vector<int> initial_start_pos_gen(const long long base_sieve_size, const long long sieve_max, const std::vector<int>& seed_prime) {
 	// sieve_max*x - seed_prime*y = -1を満たすyの配列を返す。
-	// つまり、あまり1のスレッドにおける各素数の開始位置を返す。
-	std::vector<int> v;
-	for (int i = 0; i < base_sieve_size; i++) {
-		v.push_back(0);
-	}
+	// あまり1のスレッドにおける各素数の開始位置を返す。
+	std::vector<int> v(base_sieve_size, 0);
 	for (size_t i = base_sieve_size; i < seed_prime.size(); i++) {
 		int x = 0, y = 0;
 		int d = extgcd(sieve_max, -seed_prime[i], x, y);
@@ -94,7 +91,7 @@ long long voidhoge::prime_binary_array::eratosthenes_multithread(const long long
 	debug << limit << '\n';
 	// データ構造の準備
 	const auto seed_prime = seed_gen(limit);
-	base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
+	this->base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
 	auto f = [&](){
 		int tmp = 1;
 		for (int i = 0; i < base_sieve_size; i++) {
@@ -119,8 +116,8 @@ long long voidhoge::prime_binary_array::eratosthenes_multithread(const long long
 		}
 	}
 	long long datasize = 0;
-	for (size_t i = 0; i < data.size(); i++) {
-		datasize += data[i].size();
+	for (auto &tmp: data) {
+		datasize += tmp.size();
 	}
 	debug << "about " << datasize/8/(pow(1024, 3)) << " GB (" << datasize << " bits) allocated." << '\n';
 	debug << "compression ratio: " << (double)limit/datasize << '\n';
@@ -154,9 +151,9 @@ long long voidhoge::prime_binary_array::eratosthenes_multithread(const long long
 	// 素数のカウント
 	long long count = 0;
 	debug << "counting..." << '\n';
-	for (size_t i = 0; i < data.size(); i++) {
-		for (size_t j = 0; j < data[i].size(); j++) {
-			if (data[i][j] == false) {
+	for (const auto &a: this->data) {
+		for (const auto &b: a) {
+			if (!b) {
 				count++;
 			}
 		}
@@ -167,7 +164,7 @@ long long voidhoge::prime_binary_array::eratosthenes_multithread(const long long
 }
 
 std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_pos, const size_t line_pos) const {
-	if (base_sieve.empty() == true) {
+	if (base_sieve.empty()) {
 		return std::make_pair(0, false);
 	}
 	if (base_pos < 0) {

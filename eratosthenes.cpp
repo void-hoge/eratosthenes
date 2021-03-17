@@ -6,8 +6,7 @@
 #include <numeric>
 #include <cmath>
 
-std::vector<int> seed_gen(const long long limit) {
-	const auto size = (long long)std::sqrt(limit)+1;
+std::vector<int> seed_gen(const long long size) {
 	std::vector<bool> data(size, false);
 	data[0] = true;
 	data[1] = true;
@@ -90,7 +89,7 @@ std::chrono::system_clock::duration eratosthenes_thread(const int offset, const 
 long long voidhoge::prime_binary_array::eratosthenes_multithread(const long long limit, const int base_sieve_size, std::ostream& debug) {
 	debug << limit << '\n';
 	// データ構造の準備
-	const auto seed_prime = seed_gen(limit);
+	const auto seed_prime = seed_gen(std::sqrt(limit)+1);
 	this->base_sieve = base_sieve_gen(base_sieve_size, seed_prime);
 	auto f = [&](){
 		int tmp = 1;
@@ -167,14 +166,10 @@ std::pair<long long, bool> voidhoge::prime_binary_array::at(const size_t base_po
 	if (base_sieve.empty()) {
 		return std::make_pair(0, false);
 	}
-	if (base_pos < 0) {
-		return std::make_pair(0, false);
-	}else if(base_pos >= base_sieve.size()) {
+	if(base_pos >= base_sieve.size()) {
 		return std::make_pair(0, false);
 	}
-	if (line_pos < 0) {
-		return std::make_pair(0, false);
-	}else if(line_pos >= data[base_pos].size()) {
+	if(line_pos >= data[base_pos].size()) {
 		return std::make_pair(0, false);
 	}
 	return std::make_pair(sieve_max*line_pos+base_sieve[base_pos], !data[base_pos][line_pos]);
@@ -194,20 +189,23 @@ size_t voidhoge::prime_binary_array::get_line_size() const {
 	return data[0].size();
 }
 
-void voidhoge::prime_binary_array::dump(const long long int start, const long long int end, const std::string separator, std::ostream& ost) {
+void voidhoge::prime_binary_array::dump(const long long start, const long long end, const std::string separator, std::ostream& ost) {
 	auto start_line = start / *(this->base_sieve.end()-1);
 	if (start_line < 0) {
 		start_line = 0;
 	}
-	for (size_t i = 1; i < this->base_sieve.size(); i++) {
-		if (this->base_sieve.at(i) < start) {
-			continue;
+	if (this->at(1, 0).first > start) {
+		const auto tmp = seed_gen(this->at(1, 0).first);
+		for (const auto& a: tmp) {
+			if (a < start) {
+				continue;
+			}
+			if (a >= end) {
+				ost << '\n';
+				return;
+			}
+			ost << a << separator;
 		}
-		if (this->base_sieve.at(i) >= end) {
-			ost << '\n';
-			return;
-		}
-		ost << this->base_sieve.at(i) << separator;
 	}
 	for (size_t i = start_line; i < this->get_line_size(); i++) {
 		for (size_t j = 0; j < this->get_base_size(); j++) {
